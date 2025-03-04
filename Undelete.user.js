@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Undelete
 // @namespace    BANC
-// @version      0.1.2
+// @version      0.1.3
 // @description  Adds 50 steps to bring back removed segments
 // @author       Krzysztof Kruk
 // @match        https://spelunker.cave-explorer.org/
@@ -10,7 +10,7 @@
 // @grant        none
 // ==/UserScript==
 
-/* global viewer */
+/* global viewer, BigInt */
 
 (function() {
   'use strict';
@@ -39,8 +39,8 @@ const checkForViewer = setInterval(() => {
   viewer.selectedLayer.layer_.layer_.displayState.segmentationGroupState.value.selectedSegments.changed.add((segId, added) => {
     if (added) return
     if (Array.isArray(segId)) return
+    segId = segId.toString()
 
-    segId = segId.toJSON()
     if (segId.length !== 18) return
 
     const deleted = getLS()
@@ -58,11 +58,7 @@ const checkForViewer = setInterval(() => {
     const deleted = getLS()
     if (!deleted.length) return
 
-    const segIdString = deleted.pop()
-    // clone an already (always?) existing object to be able to pass it to the add() methods
-    // and to have acccess to the .parseString() method
-    const emptySegId = viewer.selectedLayer.layer_.layer_.displayState.segmentSelectionState.selectedSegment.clone()
-    const segId = emptySegId.parseString(segIdString)
+    const segId = BigInt(deleted.pop())
     viewer.selectedLayer.layer_.layer_.displayState.segmentationGroupState.value.selectedSegments.add(segId)
     viewer.selectedLayer.layer_.layer_.displayState.segmentationGroupState.value.visibleSegments.add(segId)
     setLS(deleted)
